@@ -1,0 +1,8 @@
+{
+  "name": "hello-loop",
+  "version": "1.0.0",
+  "description": "The smallest vivid demonstration that exit code 2 means 'keep working'.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

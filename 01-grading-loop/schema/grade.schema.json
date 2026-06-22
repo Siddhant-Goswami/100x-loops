@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Grade",
+  "description": "The structured output every grading run must produce. The Stop hook validates against this — a grade that does not conform forces the loop to keep working.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["submission_id", "criteria", "overall", "confidence", "needs_human_review", "reasoning"],
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "description": "Filename stem of the graded submission, e.g. 'alice'."
+    },
+    "criteria": {
+      "type": "object",
+      "description": "One entry per rubric criterion. Keys must match the rubric exactly.",
+      "additionalProperties": false,
+      "required": ["correctness", "completeness", "clarity"],
+      "properties": {
+        "correctness":  { "$ref": "#/definitions/criterion" },
+        "completeness": { "$ref": "#/definitions/criterion" },
+        "clarity":      { "$ref": "#/definitions/criterion" }
+      }
+    },
+    "overall": {
+      "type": "string",
+      "description": "Coarse final verdict. Low-precision on purpose — LLMs calibrate 3 buckets far better than a 1-100 scale.",
+      "enum": ["pass", "partial", "fail"]
+    },
+    "confidence": {
+      "type": "number",
+      "description": "How sure the grader is. Below the escalation threshold the case is routed to a human, NOT trusted.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "needs_human_review": {
+      "type": "boolean",
+      "description": "Set by the grader and/or the escalation gate. The whole point of the loop: surface only the uncertain cases."
+    },
+    "reasoning": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Short justification tying the verdict back to rubric evidence."
+    }
+  },
+  "definitions": {
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "evidence"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["pass", "partial", "fail"]
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 10,
+          "description": "A quote or specific pointer from the submission that justifies the level."
+        }
+      }
+    }
+  }
+}

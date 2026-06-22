@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Deck",
+  "description": "The final artifact. The QA gate validates against this — a deck that is missing speaker notes or has an unsourced claim is NOT done, and the loop keeps working.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "generated_for", "slides"],
+  "properties": {
+    "title": { "type": "string", "minLength": 5 },
+    "generated_for": { "type": "string", "description": "Audience/occasion, e.g. '100x cohort — week 4'." },
+    "slides": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "type", "heading", "speaker_notes"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["title", "content", "summary"] },
+          "heading": { "type": "string", "minLength": 3 },
+          "topic": { "type": ["string", "null"], "description": "Slug from topics.md for content slides; null for title/summary." },
+          "bullets": { "type": "array", "items": { "type": "string" } },
+          "claims": {
+            "type": "array",
+            "description": "Sourced claims shown on the slide. Required to be non-empty on content slides (enforced by the QA gate).",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["text", "source"],
+              "properties": {
+                "text": { "type": "string", "minLength": 10 },
+                "source": { "type": "string", "pattern": "^https?://" }
+              }
+            }
+          },
+          "speaker_notes": {
+            "type": "string",
+            "minLength": 30,
+            "description": "Per-slide notes for the lecturer. EVERY slide must have these — the loop's headline rule."
+          }
+        }
+      }
+    }
+  }
+}

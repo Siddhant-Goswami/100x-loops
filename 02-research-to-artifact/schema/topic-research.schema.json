@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TopicResearch",
+  "description": "What one research worker must return for one topic. Every key point MUST carry a source — an unsourced claim cannot reach a slide.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topic", "headline", "key_points", "takeaway"],
+  "properties": {
+    "topic": { "type": "string", "description": "The topic slug, matching topics.md." },
+    "headline": { "type": "string", "minLength": 15, "description": "One-sentence framing of the topic." },
+    "key_points": {
+      "type": "array",
+      "minItems": 3,
+      "description": "At least 3 sourced facts. These become the slide's claims.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text", "source"],
+        "properties": {
+          "text": { "type": "string", "minLength": 15 },
+          "source": { "type": "string", "pattern": "^https?://", "description": "A real URL backing the claim." }
+        }
+      }
+    },
+    "takeaway": { "type": "string", "minLength": 15, "description": "The one thing students should remember." }
+  }
+}
