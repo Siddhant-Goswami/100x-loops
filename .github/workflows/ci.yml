@@ -1,0 +1,71 @@
+name: loops-ci
+
+# Proves the four loops stay green: runs the full narrated walkthrough offline
+# (test doubles stand in for the LLM) plus per-loop gate assertions. No API key,
+# no tokens — pure bash + jq + node.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run the full walkthrough (all four loops)
+        run: ./demo.sh --fast
+
+      - name: Loop 00 — Stop hook blocks while tests fail (exit 2)
+        working-directory: 00-hello-loop
+        run: |
+          rc=0; echo '{"stop_hook_active":false}' | ./scripts/verify-tests.sh || rc=$?
+          test "$rc" = "2" || { echo "expected exit 2, got $rc"; exit 1; }
+
+      - name: Loop 01 — grading routes 2 auto / 2 review
+        working-directory: 01-grading-loop
+        run: |
+          GRADER=mock ./scripts/grade-all.sh
+          test "$(grep -c '"routed":"auto"'   grades.jsonl)" = "2"
+          test "$(grep -c '"routed":"review"' grades.jsonl)" = "2"
+
+      - name: Loop 01 — verify gate rejects a malformed grade
+        working-directory: 01-grading-loop
+        run: |
+          echo '{"submission_id":"x","criteria":{},"overall":"pass","confidence":2,"needs_human_review":false,"reasoning":"x"}' > out/_bad.json
+          rc=0; ./scripts/verify-grade.sh out/_bad.json || rc=$?
+          test "$rc" = "1" || { echo "expected exit 1, got $rc"; exit 1; }
+
+      - name: Loop 02 — deck passes QA (every slide sourced + noted, all topics covered)
+        working-directory: 02-research-to-artifact
+        run: |
+          RESEARCHER=mock ./scripts/research-deck.sh
+          ./scripts/qa-deck.sh out/deck.json
+
+      - name: Loop 02 — QA gate rejects a deck missing notes / sources
+        working-directory: 02-research-to-artifact
+        run: |
+          jq '.slides[1].speaker_notes="" | .slides[2].claims[0].source="x"' out/deck.json > out/_bad.json
+          rc=0; ./scripts/qa-deck.sh out/_bad.json || rc=$?
+          test "$rc" = "1" || { echo "expected exit 1, got $rc"; exit 1; }
+
+      - name: Loop 03 — propose is a no-op until approved, then idempotent
+        working-directory: 03-self-improving
+        run: |
+          ./scripts/record-override.sh carol partial pass "implicit termination still counts"
+          ./scripts/learn.sh
+          grep -q "No calibration examples yet" rubric.md || { echo "proposal must not modify rubric"; exit 1; }
+          APPROVE=1 ./scripts/learn.sh
+          APPROVE=1 ./scripts/learn.sh
+          test "$(grep -c 'AUTO-CALIBRATION' rubric.md)" = "2" || { echo "block duplicated"; exit 1; }
+          grep -q "binding precedent" rubric.md || { echo "calibration not applied"; exit 1; }
