@@ -1,5 +1,7 @@
 # 100x — Loop Engineering in Agentic Engineering
 
+[![loops-ci](https://github.com/Siddhant-Goswami/100x-loops/actions/workflows/ci.yml/badge.svg)](https://github.com/Siddhant-Goswami/100x-loops/actions/workflows/ci.yml)
+
 Buildable companion loops for the "derive before name" tutorial on the loop as
 the defining primitive of agents. Each loop is a self-contained Claude Code
 project you can run, read, and teach from.
