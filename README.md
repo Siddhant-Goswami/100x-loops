@@ -2,6 +2,15 @@
 
 [![loops-ci](https://github.com/Siddhant-Goswami/100x-loops/actions/workflows/ci.yml/badge.svg)](https://github.com/Siddhant-Goswami/100x-loops/actions/workflows/ci.yml)
 
+![A real Claude Code session in 00-hello-loop: the agent reports the failing test and tries to stop, the Stop hook exits 2 and blocks it — so it fixes its own bug, reruns the tests, and only then is allowed to finish.](assets/hello-loop-demo.gif)
+
+> **↑ 25 seconds, the whole thesis.** A real session in [`00-hello-loop`](./00-hello-loop):
+> the agent reports the failing test and tries to stop — and the Stop hook **refuses**
+> (`[block 1/3] Tests are still failing…`, exit code 2). Denied permission to stop, it goes
+> back, fixes its own bug, reruns the tests, and only then is it *allowed* to finish. The
+> test decided "done", not the model. Reproduce it yourself:
+> `cd 00-hello-loop && claude "Make the tests pass."`
+
 Buildable companion loops for the "derive before name" tutorial on the loop as
 the defining primitive of agents. Each loop is a self-contained Claude Code
 project you can run, read, and teach from.
