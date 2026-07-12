@@ -53,4 +53,4 @@ Build order is deliberate: **hello-loop** (the bare primitive) → **grading**
 - **Each loop runs offline first** via a deterministic test double, so you can see
   the machinery before spending tokens.
 
-Start with [`01-grading-loop`](./01-grading-loop).
+Start with [`00-hello-loop`](./00-hello-loop) — the whole primitive on one screen — then read 01 → 02 → 03 in order.
