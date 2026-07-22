@@ -52,6 +52,13 @@ beat
 b "── Loop 03 · self-improving meta-loop ───────────────────────"
 dim "The loop edits its OWN rubric from instructor corrections — behind a human gate."
 cd 03-self-improving
+# The demo mutates rubric.md (that's the whole point of this loop), then restores
+# it. Back up whatever the learner currently has — committed OR hand-edited — and
+# put it back verbatim on the way out. (The old `git checkout -- rubric.md` reset
+# to the committed version, silently discarding a learner's own edits, and only
+# worked inside a git checkout at all.) An EXIT trap guarantees restore even on ^C.
+_rubric_bak="$(mktemp)"; cp rubric.md "$_rubric_bak"
+trap 'cp "$_rubric_bak" "$ROOT/03-self-improving/rubric.md" 2>/dev/null; rm -f "$_rubric_bak"' EXIT
 rm -f calibration/decisions.jsonl calibration/agreement-history.jsonl calibration/proposed-calibration.md 2>/dev/null || true
 ./scripts/record-override.sh alice pass    pass    "" >/dev/null
 ./scripts/record-override.sh bob   fail    fail    "" >/dev/null
@@ -64,8 +71,8 @@ dim "learn.sh PROPOSES a rubric update — writes nothing until APPROVE=1:"
 dim "Instructor approves -> the rubric rewrites its own calibration block:"
 APPROVE=1 ./scripts/learn.sh | sed -n '3p' | sed 's/^/  /'
 sed -n '/BEGIN AUTO-CALIBRATION/,/END AUTO-CALIBRATION/p' rubric.md | sed -n '4,8p' | sed 's/^/    /'
-# reset to clean shipping state
-git checkout -- rubric.md 2>/dev/null || awk '/BEGIN AUTO-CALIBRATION/{print;print "_No calibration examples yet. Run the grading loop, let instructors correct it,";print "record the corrections, and run `scripts/learn.sh` to populate this section._";s=1;next}/END AUTO-CALIBRATION/{s=0;print;next}!s' rubric.md > r.tmp && [ -f r.tmp ] && mv r.tmp rubric.md
+# restore the learner's rubric.md verbatim and clear the trap
+cp "$_rubric_bak" rubric.md && rm -f "$_rubric_bak"; trap - EXIT
 rm -f calibration/decisions.jsonl calibration/agreement-history.jsonl calibration/proposed-calibration.md 2>/dev/null || true
 cd "$ROOT"
 beat
